@@ -71,7 +71,6 @@ var _createClass = function () { function defineProperties(target, props) { for 
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-//first
 var Area = function () {
     function Area() {
         _classCallCheck(this, Area);
@@ -105,6 +104,7 @@ var Area = function () {
             this.width = window.innerWidth;
             this.height = window.innerHeight;
             this.column = Math.floor(this.width / (this.space + 15));
+            this.row = Math.floor(images.length / this.column);
             this.endPos = -this.itemHeight;
             this.startPos = this.column * this.itemHeight;
 
@@ -153,7 +153,6 @@ var Timer = function () {
     }, {
         key: 'stop',
         value: function stop() {
-            console.log('stop');
             cancelAnimationFrame(this.timer);
             this.ismoved = false;
         }
@@ -175,7 +174,7 @@ var Images = function () {
         _classCallCheck(this, Images);
 
         this.images = [];
-        this.length = 20;
+        this.length = 50;
         for (var i = 0; i < this.length; i++) {
             // this.images.push(
             //     {'src':'img/img ('+i+').jpg'}
@@ -200,11 +199,24 @@ var Images = function () {
         }
     }, {
         key: 'takashi',
-        value: function takashi(current, index) {
-            // const top = 
-            // const bottom =
-            var right = current + 1 === area.column ? 0 : current + 1;
-            var left = current === 0 ? area.column : current - 1;
+        value: function takashi(current, column, row) {
+            console.log(row);
+            var top = row === 0 ? area.row : current - area.column;
+            var bottom = row + 1 === area.row ? 0 : current + area.column;
+            var right = column + 1 === area.column ? 0 : current + 1;
+            var left = column === 0 ? false : current - 1;
+
+            this.images[top].akira('top');
+            this.images[bottom].akira('bottom');
+            this.images[right].akira('right');
+            if (left) this.images[left].akira('left');
+        }
+    }, {
+        key: 'tetsuo',
+        value: function tetsuo() {
+            for (var i = 0; i < this.length; i++) {
+                this.images[i].tetsuo();
+            }
         }
     }, {
         key: 'onResize',
@@ -237,6 +249,7 @@ var Img = function () {
         this.speed = 3;
         this.istouched = false;
         this.delay;
+        this.class;
     }
 
     _createClass(Img, [{
@@ -256,50 +269,59 @@ var Img = function () {
                 return _this3.onClick();
             });
         }
+
+        // checkTouch() {
+        //     console.log(this.istouched);
+        //     if (!this.istouched) timer.play();
+        // }
+
     }, {
         key: 'onMouseEnter',
         value: function onMouseEnter() {
-            var _this4 = this;
-
-            this.istouched = true;
+            // console.log('enter');
+            // this.istouched = true;
             timer.stop();
             // clearTimeout(this.delay);
-            this.delay = setTimeout(function () {
-                _this4.istouched = true;
-            }, 100);
 
-            timer.takashi(this.col);
+            images.takashi(this.index, this.col, this.row);
         }
     }, {
         key: 'onMouseLeave',
         value: function onMouseLeave() {
-            // this.delay = setTimeout( ()=>{
-            //     console.log(this);
-            //         }
-            //     ,1000);
-            this.istouched = false;
-            if (!this.istouched) this.play();
+            console.log('leave');
+            // this.istouched = false;
+            // setTimeout(this.checkTouch.bind(this), 1000);
+
+            if (!modal.isOpen) {
+                images.tetsuo(this.index, this.column);
+                timer.play();
+            }
         }
-    }, {
-        key: 'play',
-        value: function play() {
-            timer.play();
-        }
+
+        // play() {
+        //     timer.play();
+        // }
+
     }, {
         key: 'onClick',
         value: function onClick() {
             this.istouched = true;
-            timer.stop();
             // clearTimeout(this.delay);
             modal.setImage(this.path);
             modal.open();
         }
     }, {
-        key: 'scale',
-        value: function scale() {}
-    }, {
         key: 'akira',
-        value: function akira(pos, power) {}
+        value: function akira(cls) {
+            this.elm.removeClass(this.class);
+            this.class = cls;
+            this.elm.addClass(this.class);
+        }
+    }, {
+        key: 'tetsuo',
+        value: function tetsuo() {
+            this.elm.removeClass('top left right bottom');
+        }
     }, {
         key: 'moveTo',
         value: function moveTo() {
@@ -345,15 +367,16 @@ var Modal = function () {
         this.$target = $('#js-modal>span');
         this.$modal = $('#js-modal');
         this.$overlay = $('#js-overlay');
+        this.isOpen = false;
     }
 
     _createClass(Modal, [{
         key: 'init',
         value: function init() {
-            var _this5 = this;
+            var _this4 = this;
 
             this.$overlay.on('click', function () {
-                return _this5.close();
+                return _this4.close();
             });
         }
     }, {
@@ -364,14 +387,18 @@ var Modal = function () {
     }, {
         key: 'open',
         value: function open() {
+            timer.stop();
             this.$modal.addClass('active');
             this.$overlay.addClass('active');
+            this.isOpen = true;
         }
     }, {
         key: 'close',
         value: function close() {
+            timer.play();
             this.$modal.removeClass('active');
             this.$overlay.removeClass('active');
+            this.isOpen = false;
         }
     }]);
 
